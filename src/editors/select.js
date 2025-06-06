@@ -60,8 +60,12 @@ export class SelectEditor extends AbstractEditor {
   }
 
   typecast (value) {
-    if (this.schema.type === 'boolean') return value === 'undefined' || value === undefined ? undefined : !!value
-    else if (this.schema.type === 'number') return 1 * value || 0
+    if (this.schema.type === 'boolean') {
+      if (value === 'false' || value === 'true') {
+        return value === 'true'
+      }
+      return value === 'undefined' || value === undefined ? undefined : !!value
+    } else if (this.schema.type === 'number') return 1 * value || 0
     else if (this.schema.type === 'integer') return Math.floor(value * 1 || 0)
     else if (this.schema.enum && value === undefined) return undefined
     return `${value}`
