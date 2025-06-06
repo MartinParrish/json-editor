@@ -94,10 +94,13 @@ export class SelectEditor extends AbstractEditor {
       /* Enum options enumerated */
     } else if (this.schema.enum) {
       const display = (this.schema.options && this.schema.options.enum_titles) || []
-
       this.schema.enum.forEach((option, i) => {
         this.enum_options[i] = `${option}`
-        this.enum_display[i] = `${this.translateProperty(display[i]) || option}`
+        if (typeof this.schema.enumNames !== 'undefined') {
+          this.enum_display[i] = `${this.schema.enumNames[i]}`
+        } else {
+          this.enum_display[i] = `${this.translateProperty(display[i]) || option}`
+        }
         this.enum_values[i] = this.typecast(option)
       })
       /* Boolean */
