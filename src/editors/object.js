@@ -6,6 +6,11 @@ export class ObjectEditor extends AbstractEditor {
   constructor (options, defaults, depth) {
     super(options, defaults)
     this.currentDepth = depth
+
+    // Set the property that will be used for tab grouping
+    this.tab_property_key = this.jsoneditor.options.tab_property_key || 'tab'
+    // Set default tab name text
+    this.default_tab_name = this.jsoneditor.options.default_tab_name || 'General'
   }
 
   getChildEditors () {
@@ -84,6 +89,7 @@ export class ObjectEditor extends AbstractEditor {
 
     let container
     const isCategoriesFormat = (this.format === 'categories')
+    const isCategoriesGroupedFormat = (this.format === 'categories-grouped')
     const rows = []
     let key = null
     let editor = null
@@ -320,6 +326,103 @@ export class ObjectEditor extends AbstractEditor {
         }
         return
         /* Normal layout */
+      } else if (isCategoriesGroupedFormat) {
+        /* A container for properties not object nor arrays */
+        // const containerSimple = document.createElement('div')
+        /* This will be the place to (re)build tabs and panes */
+        /* tabs_holder has 2 childs, [0]: ul.nav.nav-tabs and [1]: div.tab-content */
+        const newTabsHolder = this.theme.getTopTabHolder(this.translateProperty(this.schema.title))
+        /* child [1] of previous, stores panes */
+        const newTabPanesContainer = this.theme.getTopTabContentHolder(newTabsHolder)
+
+        // NEW: Create a map to track tab groups and their associated panes
+        const tabGroups = new Map()
+
+        // Default tab for properties without a tab property
+        const defaultTabName = 'General'
+
+        // Process all properties and organize them by tab group
+        this.property_order.forEach(key => {
+          const editor = this.editors[key]
+          if (editor.property_removed) return
+
+          // Get the tab name from the property schema
+          let tabName = defaultTabName
+
+          // Check if property has a tab defined
+          if (editor.schema && editor.schema[this.tab_property_key]) {
+            tabName = editor.schema[this.tab_property_key]
+          }
+
+          // Create a new tab group if it doesn't exist
+          if (!tabGroups.has(tabName)) {
+            const aPane = this.theme.getTabContent()
+            aPane.id = this.getValidId(tabName)
+
+            // Create a grid container for this tab
+            const gridContainer = this.theme.getGridContainer()
+            aPane.appendChild(gridContainer)
+
+            // Store the tab group info
+            tabGroups.set(tabName, {
+              pane: aPane,
+              gridContainer,
+              editors: []
+            })
+
+            // Add the pane to the container
+            newTabPanesContainer.appendChild(aPane)
+            // Add the tab to the tabs holder
+            this.addRow(editor, newTabsHolder, aPane, tabName)
+          }
+
+          // Add the editor to the tab group
+          const tabGroup = tabGroups.get(tabName)
+          tabGroup.editors.push(editor)
+
+          // Create a grid row for this editor
+          const gridRow = this.theme.getGridRow()
+
+          // Set column size and visibility
+          if (editor.options.hidden) {
+            editor.container.style.display = 'none'
+          } else {
+            this.theme.setGridColumnSize(editor.container, 12)
+          }
+
+          // Add the editor to the row
+          gridRow.appendChild(editor.container)
+
+          // Add the row to the grid container
+          tabGroup.gridContainer.appendChild(gridRow)
+
+          editor.tab_text = editor.tab.querySelector('span') || editor.tab
+          editor.rowPane = tabGroup.pane
+        })
+
+        // Erase old panes
+        while (this.tabPanesContainer && this.tabPanesContainer.firstChild) {
+          this.tabPanesContainer.removeChild(this.tabPanesContainer.firstChild)
+        }
+
+        // Erase old tabs and set the new ones
+        if (this.tabs_holder) {
+          const parentTabsHolder = this.tabs_holder.parentNode
+          parentTabsHolder.removeChild(parentTabsHolder.firstChild)
+          parentTabsHolder.appendChild(newTabsHolder)
+        }
+
+        this.tabPanesContainer = newTabPanesContainer
+        this.tabs_holder = newTabsHolder
+
+        // Activate the first tab
+        const firstTab = this.theme.getFirstTab(this.tabs_holder)
+        if (firstTab) {
+          trigger(firstTab, 'click')
+        }
+
+        return
+        // End of categories grouped
       }
       this.property_order.forEach(key => {
         const editor = this.editors[key]
@@ -441,12 +544,14 @@ export class ObjectEditor extends AbstractEditor {
   }
 
   /* "Borrow" from arrays code */
-  addTab (idx) {
+  addTab (idx, tabText) {
     const isObjOrArray = this.rows[idx].schema && (this.rows[idx].schema.type === 'object' || this.rows[idx].schema.type === 'array')
     if (this.tabs_holder) {
       this.rows[idx].tab_text = document.createElement('span')
 
-      if (!isObjOrArray) {
+      if (typeof tabText !== 'undefined') {
+        this.rows[idx].tab_text.textContent = tabText
+      } else if (!isObjOrArray) {
         this.rows[idx].tab_text.textContent = (typeof this.schema.basicCategoryTitle === 'undefined') ? 'Basic' : this.schema.basicCategoryTitle
       } else {
         this.rows[idx].tab_text.textContent = this.rows[idx].getHeaderText()
@@ -461,7 +566,7 @@ export class ObjectEditor extends AbstractEditor {
     }
   }
 
-  addRow (editor, tabHolder, aPane) {
+  addRow (editor, tabHolder, aPane, tabText) {
     const rowsLen = this.rows.length
     const isObjOrArray = editor.schema.type === 'object' || editor.schema.type === 'array'
 
@@ -487,7 +592,7 @@ export class ObjectEditor extends AbstractEditor {
         this.rows[rowsLen].rowPane = this.rows[this.basicTab].rowPane
       }
     } else {
-      this.addTab(rowsLen)
+      this.addTab(rowsLen, tabText)
       this.theme.addTopTab(tabHolder, this.rows[rowsLen].tab)
     }
   }
@@ -519,7 +624,7 @@ export class ObjectEditor extends AbstractEditor {
   }
 
   build () {
-    const isCategoriesFormat = (this.format === 'categories')
+    const isCategoriesFormat = (this.format === 'categories' || this.format === 'categories-grouped')
     this.rows = []
     this.active_tab = null
 
