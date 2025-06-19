@@ -107,6 +107,11 @@ export class SelectEditor extends AbstractEditor {
         }
         this.enum_values[i] = this.typecast(option)
       })
+      if (!this.isRequired()) {
+        this.enum_display.unshift('-')
+        this.enum_options.unshift('undefined')
+        this.enum_values.unshift(undefined)
+      }
       /* Boolean */
     } else if (this.schema.type === 'boolean') {
       this.enum_display = (this.schema.options && this.schema.options.enum_titles) || ['true', 'false']
