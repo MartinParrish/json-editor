@@ -151,7 +151,8 @@ export class Validator {
           return [{
             path,
             property: 'enum',
-            message: this.translate('error_enum', null, schema)
+            message: this.translate('error_enum', null, schema),
+            options: schema.enum
           }]
         }
         return []
