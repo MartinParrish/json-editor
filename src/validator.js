@@ -477,11 +477,15 @@ export class Validator {
             if (editor && editor.dependenciesFulfilled === false) return
             /* Ignore required error if editor is of type "button" or "info" */
             if (editor && ['button', 'info'].includes(editor.schema.format || editor.schema.type)) return
+            let title = schema && schema.properties && schema.properties[e] && schema.properties[e].title ? schema.properties[e].title : null
+            if (title === null) {
+              title = editor && editor.schema && editor.schema.title ? editor.schema.title : e
+            }
             errors.push({
               path,
               property: 'required',
-              message: this.translate('error_required', [schema && schema.properties && schema.properties[e] && schema.properties[e].title ? schema.properties[e].title : e], schema),
-              required_property: schema && schema.properties && schema.properties[e] && schema.properties[e].title ? schema.properties[e].title : e
+              message: this.translate('error_required', [title], schema),
+              required_property: e
             })
           })
         }
