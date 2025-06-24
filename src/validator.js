@@ -209,11 +209,22 @@ export class Validator {
       },
       not (schema, value, path) {
         if (!this._validateSchema(schema.not, value, path).length) {
-          return [{
-            path,
-            property: 'not',
-            message: this.translate('error_not', null, schema)
-          }]
+          if (schema.not.required && schema.not.required.length > 0) {
+            const e = schema.not.required[0]
+            const editor = this.jsoneditor.getEditor(`${path}.${e}`)
+            const title = editor && editor.schema && editor.schema.title ? editor.schema.title : e
+            return [{
+              path: `${path}.${e}`,
+              property: 'not',
+              message: this.translate('error_not_required', [title], schema)
+            }]
+          } else {
+            return [{
+              path,
+              property: 'not',
+              message: this.translate('error_not', null, schema)
+            }]
+          }
         }
         return []
       },
@@ -482,7 +493,7 @@ export class Validator {
               title = editor && editor.schema && editor.schema.title ? editor.schema.title : e
             }
             errors.push({
-              path,
+              path: `${path}.${e}`,
               property: 'required',
               message: this.translate('error_required', [title], schema),
               required_property: e

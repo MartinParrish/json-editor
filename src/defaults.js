@@ -54,6 +54,10 @@ languages.en = {
   */
   error_not: 'Value must not validate against the provided schema',
   /**
+  * When a value not validate a 'not' schema because of a none required property
+  */
+  error_not_required: 'Property \'{{0}}\' should not be included with the current configuration',
+  /**
   * When a value does not match any of the provided types
   */
   error_type_union: 'Value must be one of the provided types',
