@@ -647,7 +647,10 @@ export class AbstractEditor {
     }
 
     if (typeof this.schema.enum !== 'undefined') {
-      return this.schema.enum[0]
+      if (this.isRequired()) {
+        return this.schema.enum[0]
+      }
+      return undefined
     }
 
     let type = this.schema.type || this.schema.oneOf
