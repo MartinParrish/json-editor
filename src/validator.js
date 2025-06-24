@@ -482,7 +482,7 @@ export class Validator {
               title = editor && editor.schema && editor.schema.title ? editor.schema.title : e
             }
             errors.push({
-              path,
+              path: `${path}.${e}`,
               property: 'required',
               message: this.translate('error_required', [title], schema),
               required_property: e
