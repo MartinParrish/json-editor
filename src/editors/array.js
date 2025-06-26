@@ -99,10 +99,7 @@ export class ArrayEditor extends AbstractEditor {
       }
       this.title_controls = this.theme.getHeaderButtonHolder()
       this.title.appendChild(this.title_controls)
-      if (this.schema.description) {
-        this.description = this.theme.getDescription(this.translateProperty(this.schema.description))
-        this.container.appendChild(this.description)
-      }
+
       this.error_holder = document.createElement('div')
       this.container.appendChild(this.error_holder)
 

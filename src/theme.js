@@ -404,6 +404,13 @@ export class AbstractTheme {
       el.appendChild(label)
       if (formName) label.setAttribute('for', formName)
     }
+
+    if (input.tagName.toLowerCase() !== 'div' && input && description) {
+      description.setAttribute('id', formName + '-description')
+      input.setAttribute('aria-describedby', formName + '-description')
+    }
+    if (description) el.appendChild(description)
+
     if ((input.type === 'checkbox' || input.type === 'radio') && label) {
       input.style.width = 'auto'
       label.insertBefore(input, label.firstChild)
@@ -418,12 +425,6 @@ export class AbstractTheme {
       input.setAttribute('id', formName)
     }
 
-    if (input.tagName.toLowerCase() !== 'div' && input && description) {
-      description.setAttribute('id', formName + '-description')
-      input.setAttribute('aria-describedby', formName + '-description')
-    }
-
-    if (description) el.appendChild(description)
     return el
   }
 
